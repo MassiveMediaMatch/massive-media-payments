@@ -18,7 +18,6 @@ out/
 
 # Gradle files
 .gradle/
-build/
 
 # Local configuration file (sdk path, etc)
 local.properties
@@ -310,8 +309,6 @@ DerivedData/
 *.perspectivev3
 !default.perspectivev3
 
-### ReactNative.Gradle Stack ###
-/build/
 
 # Ignore Gradle GUI config
 gradle-app.setting
