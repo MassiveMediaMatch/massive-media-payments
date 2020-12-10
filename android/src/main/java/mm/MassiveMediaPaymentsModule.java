@@ -1,5 +1,7 @@
 package mm;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import com.android.billingclient.api.BillingClient;
@@ -22,17 +24,22 @@ import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
+    static final String LOG_TAG = MassiveMediaPaymentsModule.class.getSimpleName();
 
     private final PromiseCache cache;
     private final PurchasesUpdatedListener purchasesUpdateListener = new PurchasesUpdatedListener() {
         @Override
         public void onPurchasesUpdated(BillingResult billingResult, List<Purchase> purchases) {
+            Log.v(LOG_TAG, "onPurchasesUpdated (" + billingResult.getResponseCode() + ")");
             if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK
                     && purchases != null) {
                 for (Purchase purchase : purchases) {
@@ -53,7 +60,6 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
         }
     };
     private final BillingClient billingClient;
-
 
     MassiveMediaPaymentsModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -83,6 +89,7 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void open(Promise promise) {
+        Log.v(LOG_TAG, "Open Connection");
         cache.clearPromises();
         if (cache.putPromise(PromiseConstants.OPEN, promise)) {
             billingClient.startConnection(new BillingClientStateListener() {
@@ -108,6 +115,7 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void getPendingTransactions(Promise promise) {
+        Log.v(LOG_TAG, "Get Pending Transactions");
         if (billingClient.isReady()) {
             Purchase.PurchasesResult purchasesResult = billingClient.queryPurchases(BillingClient.SkuType.INAPP);
             WritableArray arr = Arguments.createArray();
@@ -124,6 +132,7 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void getProducts(ReadableArray productIds, Promise promise) {
+        Log.v(LOG_TAG, "Get Products " + productIds.toString());
         if (billingClient.isReady()) {
             try {
                 ArrayList<String> productIdList = new ArrayList<>();
@@ -154,6 +163,7 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void isPurchased(String productId, Promise promise) {
+        Log.v(LOG_TAG, "Is Purchased " + productId);
         if (billingClient.isReady()) {
             Purchase.PurchasesResult purchasesResult = billingClient.queryPurchases(BillingClient.SkuType.INAPP);
 
@@ -169,7 +179,8 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void purchase(String productId, String developerPayload, Promise promise) {
+    public void purchase(String productId, final String accountId, Promise promise) {
+        Log.v(LOG_TAG, "Purchase " + productId + " with " + accountId);
         if (getCurrentActivity() != null) {
             if (billingClient.isReady()) {
                 if (cache.putPromise(PromiseConstants.PURCHASE_OR_SUBSCRIBE, promise)) {
@@ -182,6 +193,7 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
                                                                  List<SkuDetails> skuDetailsList) {
                                     BillingFlowParams billingFlowParams = BillingFlowParams.newBuilder()
                                             .setSkuDetails(skuDetailsList.get(0))
+                                            .setObfuscatedAccountId(accountId)
                                             .build();
                                     int responseCode = billingClient.launchBillingFlow(getCurrentActivity(), billingFlowParams).getResponseCode();
                                     if (responseCode != BillingClient.BillingResponseCode.OK) {
@@ -202,8 +214,9 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void finishTransaction(String productId, Promise promise) {
+        Log.v(LOG_TAG, "Finish Transaction for " + productId);
         if (billingClient.isReady()) {
-            if (cache.putPromise(PromiseConstants.PURCHASE_OR_SUBSCRIBE, promise)) {
+            if (cache.putPromise(PromiseConstants.CONSUME, promise)) {
                 Purchase.PurchasesResult purchasesResult = billingClient.queryPurchases(BillingClient.SkuType.INAPP);
                 Purchase purchase = null;
                 for (Purchase lookup : Collections.unmodifiableList(purchasesResult.getPurchasesList())) {

@@ -106,7 +106,7 @@ RCT_EXPORT_METHOD(close:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseReject
 
 #pragma mark - purchase
 
-RCT_EXPORT_METHOD(purchase:(NSString*)sku developerPayload:(NSString*)payload resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(purchase:(NSString*)sku acountId:(NSString*)acountId resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
 {
     if (!self.isOpen) {
         if (reject) {
@@ -119,7 +119,7 @@ RCT_EXPORT_METHOD(purchase:(NSString*)sku developerPayload:(NSString*)payload re
     
     SKMutablePayment* payment = [[SKMutablePayment alloc] init];
     payment.productIdentifier = sku;
-    payment.applicationUsername = payload;
+    payment.applicationUsername = acountId;
     payment.quantity = 1;
     [[SKPaymentQueue defaultQueue] addPayment:payment];
 }
