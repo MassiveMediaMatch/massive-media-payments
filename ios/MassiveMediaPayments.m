@@ -209,6 +209,14 @@ RCT_EXPORT_METHOD(getProducts:(NSArray*)productIdentifiers resolve:(RCTPromiseRe
     [productsRequest start];
 }
 
+#pragma mark - subscriptionRequest
+
+RCT_EXPORT_METHOD(getSubscriptions:(NSArray*)subscriptionIdentifiers resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+{
+    if(resolve) {
+        resolve(@(YES));
+    }
+}
 
 #pragma mark - helpers
 

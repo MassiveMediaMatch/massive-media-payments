@@ -15,7 +15,6 @@ class Factory {
         map.putString("productId", purchase.getSku());
         map.putString("orderId", purchase.getOrderId());
         map.putString("developerPayload", purchase.getDeveloperPayload());
-        // TODO check if this is actually correct?
         map.putString("receiptData", purchase.getOriginalJson());
         map.putString("receiptSignature", purchase.getSignature());
         map.putString("purchaseToken", purchase.getPurchaseToken());

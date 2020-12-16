@@ -74,6 +74,7 @@ dependencies {
     //noinspection GradleDynamicVersion
     implementation 'com.facebook.react:react-native:+'  // From node_modules
     implementation "com.android.billingclient:billing:3.0.2"
+    implementation "androidx.annotation:annotation:1.1.0"
 }
 
 def configureReactNativePom(def pom) {
