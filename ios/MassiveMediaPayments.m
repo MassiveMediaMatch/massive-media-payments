@@ -124,6 +124,25 @@ RCT_EXPORT_METHOD(purchase:(NSString*)sku acountId:(NSString*)acountId resolve:(
     [[SKPaymentQueue defaultQueue] addPayment:payment];
 }
 
+#pragma mark - purchaseSubscription
+
+RCT_EXPORT_METHOD(purchaseSubscription:(NSString*)sku acountId:(NSString*)acountId resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+{
+    if (!self.isOpen) {
+        if (reject) {
+            reject(0, @"Transaction observer is not set. Use `open` method first.", nil);
+        }
+    }
+    
+    // only resolve/reject when the payment process is completed/failed
+    [self addPromiseForKey:sku resolve:resolve reject:reject];
+    
+    SKMutablePayment* payment = [[SKMutablePayment alloc] init];
+    payment.productIdentifier = sku;
+    payment.applicationUsername = acountId;
+    payment.quantity = 1;
+    [[SKPaymentQueue defaultQueue] addPayment:payment];
+}
 
 #pragma mark - finishTransaction
 

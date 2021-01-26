@@ -197,11 +197,25 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void purchase(String productId, final String accountId, Promise promise) {
         Log.v(LOG_TAG, "Purchase " + productId + " with " + accountId);
+        SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder();
+        params.setSkusList(Arrays.asList(productId)).setType(BillingClient.SkuType.INAPP);
+
+        launchPurchaseFlow(accountId, params, promise);
+    }
+
+    @ReactMethod
+    public void purchaseSubscription(String productId, final String accountId, Promise promise) {
+        Log.v(LOG_TAG, "purchase Subscription " + productId + " with " + accountId);
+        SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder();
+        params.setSkusList(Arrays.asList(productId)).setType(BillingClient.SkuType.SUBS);
+
+        launchPurchaseFlow(accountId, params, promise);
+    }
+
+    private void launchPurchaseFlow(final String accountId, SkuDetailsParams.Builder params, Promise promise) {
         if (getCurrentActivity() != null) {
             if (billingClient.isReady()) {
                 if (cache.putPromise(PromiseConstants.PURCHASE_OR_SUBSCRIBE, promise)) {
-                    SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder();
-                    params.setSkusList(Arrays.asList(productId)).setType(BillingClient.SkuType.INAPP);
                     billingClient.querySkuDetailsAsync(params.build(),
                             new SkuDetailsResponseListener() {
                                 @Override
