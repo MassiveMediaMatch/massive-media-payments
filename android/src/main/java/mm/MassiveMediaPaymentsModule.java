@@ -200,7 +200,10 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
         SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder();
         params.setSkusList(Arrays.asList(productId)).setType(BillingClient.SkuType.INAPP);
 
-        launchPurchaseFlow(accountId, params, promise);
+        BillingFlowParams.Builder billingFlowParams = BillingFlowParams.newBuilder()
+                .setObfuscatedAccountId(accountId);
+
+        launchPurchaseFlow(params, billingFlowParams, promise);
     }
 
     @ReactMethod
@@ -209,25 +212,42 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
         SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder();
         params.setSkusList(Arrays.asList(productId)).setType(BillingClient.SkuType.SUBS);
 
-        launchPurchaseFlow(accountId, params, promise);
+        BillingFlowParams.Builder billingFlowParams = BillingFlowParams.newBuilder()
+                .setObfuscatedAccountId(accountId);
+
+        launchPurchaseFlow(params, billingFlowParams, promise);
     }
 
-    private void launchPurchaseFlow(final String accountId, SkuDetailsParams.Builder params, Promise promise) {
+    @ReactMethod
+    public void purchaseProration(String productId, String originalProductId, final String originalPurchaseToken, final int prorationMode, final String accountId, final Promise promise) {
+        Log.v(LOG_TAG, "purchase Proration " + productId + " with " + accountId + ", mode=" + prorationMode);
+        final SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder();
+        params.setSkusList(Arrays.asList(productId)).setType(BillingClient.SkuType.SUBS);
+
+        BillingFlowParams.Builder billingFlowParams = BillingFlowParams.newBuilder()
+                .setOldSku(originalProductId, originalPurchaseToken)
+                .setReplaceSkusProrationMode(prorationMode);
+
+        launchPurchaseFlow(params, billingFlowParams, promise);
+    }
+
+    private void launchPurchaseFlow(final SkuDetailsParams.Builder skuParams, final BillingFlowParams.Builder billingParams, final Promise promise) {
         if (getCurrentActivity() != null) {
             if (billingClient.isReady()) {
                 if (cache.putPromise(PromiseConstants.PURCHASE_OR_SUBSCRIBE, promise)) {
-                    billingClient.querySkuDetailsAsync(params.build(),
+                    billingClient.querySkuDetailsAsync(skuParams.build(),
                             new SkuDetailsResponseListener() {
                                 @Override
                                 public void onSkuDetailsResponse(@NonNull BillingResult billingResult,
                                                                  List<SkuDetails> skuDetailsList) {
-                                    BillingFlowParams billingFlowParams = BillingFlowParams.newBuilder()
-                                            .setSkuDetails(skuDetailsList.get(0))
-                                            .setObfuscatedAccountId(accountId)
-                                            .build();
-                                    int responseCode = billingClient.launchBillingFlow(getCurrentActivity(), billingFlowParams).getResponseCode();
-                                    if (responseCode != BillingClient.BillingResponseCode.OK) {
-                                        cache.rejectPromise(PromiseConstants.PURCHASE_OR_SUBSCRIBE, "Could not start purchase process.");
+                                    if (skuDetailsList.isEmpty()) {
+                                        promise.reject("UNSPECIFIED", "No Sku Details found for " + skuParams.build().getSkusList().toString() + ".");
+                                    } else {
+                                        billingParams.setSkuDetails(skuDetailsList.get(0));
+                                        int responseCode = billingClient.launchBillingFlow(getCurrentActivity(), billingParams.build()).getResponseCode();
+                                        if (responseCode != BillingClient.BillingResponseCode.OK) {
+                                            cache.rejectPromise(PromiseConstants.PURCHASE_OR_SUBSCRIBE, "Could not start purchase process.");
+                                        }
                                     }
                                 }
                             });
