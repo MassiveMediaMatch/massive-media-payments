@@ -225,6 +225,7 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
         params.setSkusList(Arrays.asList(productId)).setType(BillingClient.SkuType.SUBS);
 
         BillingFlowParams.Builder billingFlowParams = BillingFlowParams.newBuilder()
+                .setObfuscatedAccountId(accountId)
                 .setOldSku(originalProductId, originalPurchaseToken)
                 .setReplaceSkusProrationMode(prorationMode);
 
