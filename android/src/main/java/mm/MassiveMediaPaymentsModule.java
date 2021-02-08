@@ -116,13 +116,15 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
     public void getPendingTransactions(Promise promise) {
         Log.v(LOG_TAG, "Get Pending Transactions");
         if (billingClient.isReady()) {
-            Purchase.PurchasesResult purchasesResult = billingClient.queryPurchases(BillingClient.SkuType.INAPP);
+            Purchase.PurchasesResult inAppResult = billingClient.queryPurchases(BillingClient.SkuType.INAPP);
+            Purchase.PurchasesResult subsResult = billingClient.queryPurchases(BillingClient.SkuType.SUBS);
             WritableArray arr = Arguments.createArray();
-
-            for (Purchase purchase : Collections.unmodifiableList(purchasesResult.getPurchasesList())) {
+            for (Purchase purchase : Collections.unmodifiableList(inAppResult.getPurchasesList())) {
                 arr.pushMap(Factory.getTransaction(purchase));
             }
-
+            for (Purchase purchase : Collections.unmodifiableList(subsResult.getPurchasesList())) {
+                arr.pushMap(Factory.getTransaction(purchase));
+            }
             promise.resolve(arr);
         } else {
             promise.reject("UNSPECIFIED", "Channel is not opened. Call open().");
