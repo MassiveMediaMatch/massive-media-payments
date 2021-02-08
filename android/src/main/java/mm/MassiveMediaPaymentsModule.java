@@ -164,7 +164,7 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
                                     if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                                         cache.resolvePromise(promiseCacheKey, Factory.getProductList(skuDetailsList));
                                     } else {
-                                        cache.rejectPromise(promiseCacheKey, "Getting " + (isSubs ? "subs" : "producs") + " failed with error: " + billingResult.getResponseCode());
+                                        cache.rejectPromise(promiseCacheKey, "Getting " + (isSubs ? "subs" : "products") + " failed with error: " + billingResult.getResponseCode());
                                     }
                                 }
                             });
@@ -172,7 +172,7 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
                     promise.reject("UNSPECIFIED", "Previous open operation is not resolved.");
                 }
             } catch (Exception ex) {
-                promise.reject("UNSPECIFIED", "Failure on getting " + (isSubs ? "subs" : "producs") + " details: " + ex.getMessage());
+                promise.reject("UNSPECIFIED", "Failure on getting " + (isSubs ? "subs" : "products") + " details: " + ex.getMessage());
             }
         } else {
             promise.reject("UNSPECIFIED", "Channel is not opened. Call open().");
@@ -211,27 +211,37 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void purchaseSubscription(String productId, final String accountId, Promise promise) {
         Log.v(LOG_TAG, "purchase Subscription " + productId + " with " + accountId);
-        SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder();
-        params.setSkusList(Arrays.asList(productId)).setType(BillingClient.SkuType.SUBS);
+        BillingResult result = billingClient.isFeatureSupported(BillingClient.FeatureType.SUBSCRIPTIONS);
+        if (result.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+            SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder();
+            params.setSkusList(Arrays.asList(productId)).setType(BillingClient.SkuType.SUBS);
 
-        BillingFlowParams.Builder billingFlowParams = BillingFlowParams.newBuilder()
-                .setObfuscatedAccountId(accountId);
+            BillingFlowParams.Builder billingFlowParams = BillingFlowParams.newBuilder()
+                    .setObfuscatedAccountId(accountId);
 
-        launchPurchaseFlow(params, billingFlowParams, promise);
+            launchPurchaseFlow(params, billingFlowParams, promise);
+        } else {
+            promise.reject("UNSPECIFIED", "Subscriptions are not available on this android devices.");
+        }
     }
 
     @ReactMethod
     public void purchaseProration(String productId, String originalProductId, final String originalPurchaseToken, final int prorationMode, final String accountId, final Promise promise) {
         Log.v(LOG_TAG, "purchase Proration " + productId + " with " + accountId + ", mode=" + prorationMode);
-        final SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder();
-        params.setSkusList(Arrays.asList(productId)).setType(BillingClient.SkuType.SUBS);
+        BillingResult result = billingClient.isFeatureSupported(BillingClient.FeatureType.SUBSCRIPTIONS_UPDATE);
+        if (result.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+            final SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder();
+            params.setSkusList(Arrays.asList(productId)).setType(BillingClient.SkuType.SUBS);
 
-        BillingFlowParams.Builder billingFlowParams = BillingFlowParams.newBuilder()
-                .setObfuscatedAccountId(accountId)
-                .setOldSku(originalProductId, originalPurchaseToken)
-                .setReplaceSkusProrationMode(prorationMode);
+            BillingFlowParams.Builder billingFlowParams = BillingFlowParams.newBuilder()
+                    .setObfuscatedAccountId(accountId)
+                    .setOldSku(originalProductId, originalPurchaseToken)
+                    .setReplaceSkusProrationMode(prorationMode);
 
-        launchPurchaseFlow(params, billingFlowParams, promise);
+            launchPurchaseFlow(params, billingFlowParams, promise);
+        } else {
+            promise.reject("UNSPECIFIED", "Subscription updating is not available on this android devices.");
+        }
     }
 
     private void launchPurchaseFlow(final SkuDetailsParams.Builder skuParams, final BillingFlowParams.Builder billingParams, final Promise promise) {
