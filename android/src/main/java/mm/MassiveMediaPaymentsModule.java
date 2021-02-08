@@ -90,26 +90,23 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
     public void open(Promise promise) {
         Log.v(LOG_TAG, "Open Connection");
         cache.clearPromises();
-        if (cache.putPromise(PromiseConstants.OPEN, promise)) {
-            billingClient.startConnection(new BillingClientStateListener() {
-                @Override
-                public void onBillingSetupFinished(@NonNull BillingResult billingResult) {
-                    // The BillingClient is ready. You can query purchases here.
-                    if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                        cache.resolvePromise(PromiseConstants.OPEN, true);
-                    }
+        cache.putPromise(PromiseConstants.OPEN, promise);
+        billingClient.startConnection(new BillingClientStateListener() {
+            @Override
+            public void onBillingSetupFinished(@NonNull BillingResult billingResult) {
+                // The BillingClient is ready. You can query purchases here.
+                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                    cache.resolvePromise(PromiseConstants.OPEN, true);
                 }
+            }
 
-                @Override
-                public void onBillingServiceDisconnected() {
-                    // Try to restart the connection on the next request to
-                    // Google Play by calling the startConnection() method.
-                    cache.resolvePromise(PromiseConstants.OPEN, false);
-                }
-            });
-        } else {
-            promise.reject("UNSPECIFIED", "Previous open operation is not resolved.");
-        }
+            @Override
+            public void onBillingServiceDisconnected() {
+                // Try to restart the connection on the next request to
+                // Google Play by calling the startConnection() method.
+                cache.resolvePromise(PromiseConstants.OPEN, false);
+            }
+        });
     }
 
     @ReactMethod
@@ -153,24 +150,22 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
                 for (Object id : productIds.toArrayList()) {
                     productIdList.add(String.valueOf(id));
                 }
-                if (cache.putPromise(promiseCacheKey, promise)) {
-                    SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder();
-                    params.setSkusList(productIdList).setType(isSubs ? BillingClient.SkuType.SUBS : BillingClient.SkuType.INAPP);
-                    billingClient.querySkuDetailsAsync(params.build(),
-                            new SkuDetailsResponseListener() {
-                                @Override
-                                public void onSkuDetailsResponse(@NonNull BillingResult billingResult,
-                                                                 List<SkuDetails> skuDetailsList) {
-                                    if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                                        cache.resolvePromise(promiseCacheKey, Factory.getProductList(skuDetailsList));
-                                    } else {
-                                        cache.rejectPromise(promiseCacheKey, "Getting " + (isSubs ? "subs" : "products") + " failed with error: " + billingResult.getResponseCode());
-                                    }
+                cache.putPromise(promiseCacheKey, promise);
+                SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder();
+                params.setSkusList(productIdList).setType(isSubs ? BillingClient.SkuType.SUBS : BillingClient.SkuType.INAPP);
+                billingClient.querySkuDetailsAsync(params.build(),
+                        new SkuDetailsResponseListener() {
+                            @Override
+                            public void onSkuDetailsResponse(@NonNull BillingResult billingResult,
+                                                             List<SkuDetails> skuDetailsList) {
+                                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                                    cache.resolvePromise(promiseCacheKey, Factory.getProductList(skuDetailsList));
+                                } else {
+                                    cache.rejectPromise(promiseCacheKey, "Getting " + (isSubs ? "subs" : "products") + " failed with error: " + billingResult.getResponseCode());
                                 }
-                            });
-                } else {
-                    promise.reject("UNSPECIFIED", "Previous open operation is not resolved.");
-                }
+                            }
+                        });
+
             } catch (Exception ex) {
                 promise.reject("UNSPECIFIED", "Failure on getting " + (isSubs ? "subs" : "products") + " details: " + ex.getMessage());
             }
@@ -247,26 +242,23 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
     private void launchPurchaseFlow(final SkuDetailsParams.Builder skuParams, final BillingFlowParams.Builder billingParams, final Promise promise) {
         if (getCurrentActivity() != null) {
             if (billingClient.isReady()) {
-                if (cache.putPromise(PromiseConstants.PURCHASE_OR_SUBSCRIBE, promise)) {
-                    billingClient.querySkuDetailsAsync(skuParams.build(),
-                            new SkuDetailsResponseListener() {
-                                @Override
-                                public void onSkuDetailsResponse(@NonNull BillingResult billingResult,
-                                                                 List<SkuDetails> skuDetailsList) {
-                                    if (skuDetailsList.isEmpty()) {
-                                        promise.reject("UNSPECIFIED", "No Sku Details found for " + skuParams.build().getSkusList().toString() + ".");
-                                    } else {
-                                        billingParams.setSkuDetails(skuDetailsList.get(0));
-                                        int responseCode = billingClient.launchBillingFlow(getCurrentActivity(), billingParams.build()).getResponseCode();
-                                        if (responseCode != BillingClient.BillingResponseCode.OK) {
-                                            cache.rejectPromise(PromiseConstants.PURCHASE_OR_SUBSCRIBE, "Could not start purchase process.");
-                                        }
+                cache.putPromise(PromiseConstants.PURCHASE_OR_SUBSCRIBE, promise);
+                billingClient.querySkuDetailsAsync(skuParams.build(),
+                        new SkuDetailsResponseListener() {
+                            @Override
+                            public void onSkuDetailsResponse(@NonNull BillingResult billingResult,
+                                                             List<SkuDetails> skuDetailsList) {
+                                if (skuDetailsList.isEmpty()) {
+                                    promise.reject("UNSPECIFIED", "No Sku Details found for " + skuParams.build().getSkusList().toString() + ".");
+                                } else {
+                                    billingParams.setSkuDetails(skuDetailsList.get(0));
+                                    int responseCode = billingClient.launchBillingFlow(getCurrentActivity(), billingParams.build()).getResponseCode();
+                                    if (responseCode != BillingClient.BillingResponseCode.OK) {
+                                        cache.rejectPromise(PromiseConstants.PURCHASE_OR_SUBSCRIBE, "Could not start purchase process.");
                                     }
                                 }
-                            });
-                } else {
-                    promise.reject("UNSPECIFIED", "Previous purchase or subscribe operation is not resolved.");
-                }
+                            }
+                        });
             } else {
                 promise.reject("UNSPECIFIED", "Channel is not opened. Call open().");
             }
@@ -279,10 +271,23 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
     public void finishTransaction(String productId, Promise promise) {
         Log.v(LOG_TAG, "Finish Transaction for " + productId);
         if (billingClient.isReady()) {
-            if (cache.putPromise(PromiseConstants.CONSUME, promise)) {
-                // try to find if product is consumable
-                Purchase.PurchasesResult purchasesResult = billingClient.queryPurchases(BillingClient.SkuType.INAPP);
-                Purchase purchase = null;
+            cache.putPromise(PromiseConstants.CONSUME, promise);
+            // try to find if product is consumable
+            Purchase.PurchasesResult purchasesResult = billingClient.queryPurchases(BillingClient.SkuType.INAPP);
+            Purchase purchase = null;
+            for (Purchase lookup : Collections.unmodifiableList(purchasesResult.getPurchasesList())) {
+                if (lookup.getSku().equalsIgnoreCase(productId)) {
+                    purchase = lookup;
+                    break;
+                }
+            }
+
+            if (purchase != null) {
+                Log.v(LOG_TAG, "found purchase " + productId + " to consume.");
+                consume(purchase);
+            } else {
+                // try to find a sub now, and acknowledge if possible
+                purchasesResult = billingClient.queryPurchases(BillingClient.SkuType.SUBS);
                 for (Purchase lookup : Collections.unmodifiableList(purchasesResult.getPurchasesList())) {
                     if (lookup.getSku().equalsIgnoreCase(productId)) {
                         purchase = lookup;
@@ -291,59 +296,64 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
                 }
 
                 if (purchase != null) {
-                    ConsumeParams consumeParams =
-                            ConsumeParams.newBuilder()
-                                    .setPurchaseToken(purchase.getPurchaseToken())
-                                    .build();
-
-                    ConsumeResponseListener listener = new ConsumeResponseListener() {
-                        @Override
-                        public void onConsumeResponse(BillingResult billingResult, @NonNull String purchaseToken) {
-                            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                                cache.resolvePromise(PromiseConstants.CONSUME, true);
-                            } else {
-                                cache.rejectPromise(PromiseConstants.CONSUME, "Consume failed with error: " + billingResult.getResponseCode());
-                            }
-                        }
-                    };
-
-                    billingClient.consumeAsync(consumeParams, listener);
+                    Log.v(LOG_TAG, "found purchase " + productId + " to acknowledge.");
+                    acknowledge(purchase);
                 } else {
-                    // try to find a sub now, and acknowledge if possible
-                    purchasesResult = billingClient.queryPurchases(BillingClient.SkuType.SUBS);
-                    for (Purchase lookup : Collections.unmodifiableList(purchasesResult.getPurchasesList())) {
-                        if (lookup.getSku().equalsIgnoreCase(productId)) {
-                            purchase = lookup;
-                            break;
-                        }
-                    }
-
-                    if (purchase != null) {
-                        if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
-                            if (!purchase.isAcknowledged()) {
-                                AcknowledgePurchaseParams acknowledgePurchaseParams =
-                                        AcknowledgePurchaseParams.newBuilder()
-                                                .setPurchaseToken(purchase.getPurchaseToken())
-                                                .build();
-                                billingClient.acknowledgePurchase(acknowledgePurchaseParams, new AcknowledgePurchaseResponseListener() {
-                                    @Override
-                                    public void onAcknowledgePurchaseResponse(@NonNull BillingResult billingResult) {
-                                        if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                                            cache.resolvePromise(PromiseConstants.CONSUME, true);
-                                        } else {
-                                            cache.rejectPromise(PromiseConstants.CONSUME, "Acknowledge failed with error: " + billingResult.getResponseCode());
-                                        }
-                                    }
-                                });
-                            }
-                        }
-                    } else {
-                        promise.reject("UNSPECIFIED", "Could not find product with id " + productId + " to consume or acknowledge.");
-                    }
+                    Log.v(LOG_TAG, "could not find purchase " + productId + " to consume or acknowledge.");
+                    cache.rejectPromise(PromiseConstants.CONSUME, "Could not find product with id " + productId + " to consume or acknowledge.");
                 }
             }
         } else {
             promise.reject("UNSPECIFIED", "Channel is not opened. Call open().");
         }
+    }
+
+    private void acknowledge(final Purchase purchase) {
+        Log.v(LOG_TAG, "Acknowledge Transaction for " + purchase.getOrderId());
+        if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
+            if (!purchase.isAcknowledged()) {
+                AcknowledgePurchaseParams acknowledgePurchaseParams =
+                        AcknowledgePurchaseParams.newBuilder()
+                                .setPurchaseToken(purchase.getPurchaseToken())
+                                .build();
+                billingClient.acknowledgePurchase(acknowledgePurchaseParams, new AcknowledgePurchaseResponseListener() {
+                    @Override
+                    public void onAcknowledgePurchaseResponse(@NonNull BillingResult billingResult) {
+                        Log.v(LOG_TAG, "Acknowledge Transaction for " + purchase.getOrderId() + " resulted with response: " + billingResult.getResponseCode());
+                        if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                            cache.resolvePromise(PromiseConstants.CONSUME, true);
+                        } else {
+                            cache.rejectPromise(PromiseConstants.CONSUME, "Acknowledge failed with error: " + billingResult.getResponseCode());
+                        }
+                    }
+                });
+            } else {
+                cache.rejectPromise(PromiseConstants.CONSUME, "Product with id " + purchase.getOrderId() + " is already acknowledged.");
+            }
+        } else {
+            cache.rejectPromise(PromiseConstants.CONSUME, "Product with id " + purchase.getOrderId() + " is not purchased. State=" + purchase.getPurchaseState());
+        }
+    }
+
+    private void consume(final Purchase purchase) {
+        Log.v(LOG_TAG, "Consume Transaction for " + purchase.getOrderId());
+        ConsumeParams consumeParams =
+                ConsumeParams.newBuilder()
+                        .setPurchaseToken(purchase.getPurchaseToken())
+                        .build();
+
+        ConsumeResponseListener listener = new ConsumeResponseListener() {
+            @Override
+            public void onConsumeResponse(BillingResult billingResult, @NonNull String purchaseToken) {
+                Log.v(LOG_TAG, "Consume Transaction for " + purchase.getOrderId() + " resulted with response: " + billingResult.getResponseCode());
+                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                    cache.resolvePromise(PromiseConstants.CONSUME, true);
+                } else {
+                    cache.rejectPromise(PromiseConstants.CONSUME, "Consume failed with error: " + billingResult.getResponseCode());
+                }
+            }
+        };
+
+        billingClient.consumeAsync(consumeParams, listener);
     }
 }

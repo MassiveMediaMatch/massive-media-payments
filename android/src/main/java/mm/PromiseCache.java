@@ -31,14 +31,8 @@ public class PromiseCache {
         }
     }
 
-    synchronized Boolean putPromise(String key, Promise promise) {
-        if (!promiseCache.containsKey(key)) {
-            promiseCache.put(key, promise);
-            return true;
-        } else {
-            Log.w(LOG_TAG, String.format("Tried to put promise: %s - already exists in cache", key));
-        }
-        return false;
+    synchronized void putPromise(String key, Promise promise) {
+        promiseCache.put(key, promise);
     }
 
     synchronized Boolean hasPromise(String key) {
