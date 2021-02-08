@@ -120,7 +120,9 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
                 arr.pushMap(Factory.getTransaction(purchase));
             }
             for (Purchase purchase : Collections.unmodifiableList(subsResult.getPurchasesList())) {
-                arr.pushMap(Factory.getTransaction(purchase));
+                if (!purchase.isAcknowledged()) {
+                    arr.pushMap(Factory.getTransaction(purchase));
+                }
             }
             promise.resolve(arr);
         } else {
