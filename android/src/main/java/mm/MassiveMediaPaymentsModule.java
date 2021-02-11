@@ -39,10 +39,14 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
         @Override
         public void onPurchasesUpdated(BillingResult billingResult, List<Purchase> purchases) {
             Log.v(LOG_TAG, "onPurchasesUpdated (" + billingResult.getResponseCode() + ")");
-            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK
-                    && purchases != null) {
-                for (Purchase purchase : purchases) {
-                    onProductPurchased(purchase);
+            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                if (purchases != null) {
+                    for (Purchase purchase : purchases) {
+                        onProductPurchased(purchase);
+                    }
+                } else {
+                    // downgrades don't return a purchases, but still do return success, just pass null
+                    cache.resolvePromise(PromiseConstants.PURCHASE_OR_SUBSCRIBE, null);
                 }
             } else {
                 if (cache.hasPromise(PromiseConstants.PURCHASE_OR_SUBSCRIBE)) {

@@ -45,7 +45,7 @@ interface PaymentInterface {
     getPendingTransactions(): Promise<IPendingTransaction[]>;
     purchase(productId: string, accoundId?: string | undefined): Promise<ITransactionDetails>;
     purchaseSubscription(productId: string, accoundId?: string | undefined): Promise<ITransactionDetails>;
-    purchaseProration(productId: string, originalProductId: string, originalPurchaseToken: string, prorationMode: Proration, accountId?: string): Promise<ITransactionDetails>;
+    purchaseProration(productId: string, originalProductId: string, originalPurchaseToken: string, prorationMode: Proration, accountId?: string): Promise<ITransactionDetails | null>;
     finishTransaction(productIdOrTransactionId: string): Promise<boolean>;
     getProducts(productIds: string[]): Promise<IProduct[]>;
     getSubscriptions(subIds: string[]): Promise<IProduct[]>;
