@@ -120,12 +120,16 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
             Purchase.PurchasesResult inAppResult = billingClient.queryPurchases(BillingClient.SkuType.INAPP);
             Purchase.PurchasesResult subsResult = billingClient.queryPurchases(BillingClient.SkuType.SUBS);
             WritableArray arr = Arguments.createArray();
-            for (Purchase purchase : Collections.unmodifiableList(inAppResult.getPurchasesList())) {
-                arr.pushMap(Factory.getTransaction(purchase));
-            }
-            for (Purchase purchase : Collections.unmodifiableList(subsResult.getPurchasesList())) {
-                if (!purchase.isAcknowledged()) {
+            if (inAppResult.getPurchasesList() != null) {
+                for (Purchase purchase : Collections.unmodifiableList(inAppResult.getPurchasesList())) {
                     arr.pushMap(Factory.getTransaction(purchase));
+                }
+            }
+            if (subsResult.getPurchasesList() != null) {
+                for (Purchase purchase : Collections.unmodifiableList(subsResult.getPurchasesList())) {
+                    if (!purchase.isAcknowledged()) {
+                        arr.pushMap(Factory.getTransaction(purchase));
+                    }
                 }
             }
             promise.resolve(arr);
