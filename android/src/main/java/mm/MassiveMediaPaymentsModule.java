@@ -101,6 +101,8 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
                 // The BillingClient is ready. You can query purchases here.
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                     cache.resolvePromise(PromiseConstants.OPEN, true);
+                } else {
+                    cache.rejectPromise(PromiseConstants.OPEN, String.valueOf(billingResult.getResponseCode()));
                 }
             }
 
