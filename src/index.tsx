@@ -46,6 +46,7 @@ export enum Proration {
     IMMEDIATE_AND_CHARGE_PRORATED_PRICE = 2,
     IMMEDIATE_WITHOUT_PRORATION = 3,
     DEFERRED = 4,
+    IMMEDIATE_AND_CHARGE_FULL_PRICE = 5,
 }
 
 interface PaymentInterface {

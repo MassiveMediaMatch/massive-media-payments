@@ -14,6 +14,7 @@ export var Proration;
     Proration[Proration["IMMEDIATE_AND_CHARGE_PRORATED_PRICE"] = 2] = "IMMEDIATE_AND_CHARGE_PRORATED_PRICE";
     Proration[Proration["IMMEDIATE_WITHOUT_PRORATION"] = 3] = "IMMEDIATE_WITHOUT_PRORATION";
     Proration[Proration["DEFERRED"] = 4] = "DEFERRED";
+    Proration[Proration["IMMEDIATE_AND_CHARGE_FULL_PRICE"] = 5] = "IMMEDIATE_AND_CHARGE_FULL_PRICE";
 })(Proration || (Proration = {}));
 export default MassiveMediaPayments;
 //# sourceMappingURL=index.js.map
