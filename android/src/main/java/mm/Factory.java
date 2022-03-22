@@ -32,8 +32,13 @@ class Factory {
             map.putString("description", detail.getDescription());
             map.putBoolean("isSubscription", false);
             map.putString("currency", detail.getPriceCurrencyCode());
-            map.putDouble("priceValue", detail.getPriceAmountMicros());
-            map.putString("priceText", detail.getPrice());
+            map.putDouble("price", detail.getPriceAmountMicros() / 1000000.0);
+            map.putString("localizedPrice", detail.getPrice());
+
+            // intro price
+            map.putDouble("introductoryPrice", detail.getIntroductoryPriceAmountMicros() / 1000000.0);
+            map.putString("introductoryLocalizedPrice", detail.getIntroductoryPrice());
+
             arr.pushMap(map);
         }
         return arr;
