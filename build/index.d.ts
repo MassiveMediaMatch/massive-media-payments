@@ -19,10 +19,12 @@ export interface IProduct {
     productId: string;
     title: string;
     description: string;
-    price: string;
+    price: number;
     currency: string;
     localizedPrice: string;
     country?: string;
+    introductoryPrice?: number;
+    introductoryLocalizedPrice?: string;
 }
 export interface IPendingTransaction {
     productId: string;
