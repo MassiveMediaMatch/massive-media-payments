@@ -42,6 +42,22 @@ export interface IPendingTransaction {
     purchaseToken?: string
 }
 
+export interface IPurchaseConfig {
+    ios?: IPurchaseConfigIos
+}
+
+export interface IPurchaseConfigIos {
+    promotion?: IPurchaseConfigIosPromotion
+}
+
+export interface IPurchaseConfigIosPromotion {
+    signature: string,
+    nonce: string,
+    timestamp: number,
+    keyIdentifier: string
+    identifier: string
+}
+
 export enum Proration {
     UNKNOWN_SUBSCRIPTION_UPGRADE_DOWNGRADE_POLICY = 0,
     IMMEDIATE_WITH_TIME_PRORATION = 1,
@@ -56,7 +72,7 @@ interface PaymentInterface {
     close (): Promise<boolean>;
     getPendingTransactions (): Promise<IPendingTransaction[]>;
     purchase (productId: string, accoundId?: string | undefined): Promise<ITransactionDetails>;
-    purchaseSubscription (productId: string, accoundId?: string | undefined): Promise<ITransactionDetails>;
+    purchaseSubscription (productId: string, accoundId?: string | undefined, config?: IPurchaseConfig): Promise<ITransactionDetails>;
     purchaseProration (productId: string, originalProductId: string, originalPurchaseToken: string, prorationMode: Proration, accountId?: string): Promise<ITransactionDetails | null>;
     finishTransaction (productIdOrTransactionId: string): Promise<boolean>;
     getProducts (productIds: string[]): Promise<IProduct[]>;
