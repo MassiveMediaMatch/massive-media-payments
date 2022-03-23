@@ -106,26 +106,26 @@ RCT_EXPORT_METHOD(close:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseReject
 
 #pragma mark - purchase
 
-RCT_EXPORT_METHOD(purchase:(NSString*)sku acountId:(NSString*)acountId resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(purchase:(NSString*)sku acountId:(NSString*)acountId config:(NSDictionary*)config resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
 {
-    [self purchaseOnStore:sku acountId:acountId resolve:resolve reject:reject];
+    [self purchaseOnStore:sku acountId:acountId config:config resolve:resolve reject:reject];
 }
 
 #pragma mark - purchaseSubscription
 
-RCT_EXPORT_METHOD(purchaseSubscription:(NSString*)sku acountId:(NSString*)acountId resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(purchaseSubscription:(NSString*)sku acountId:(NSString*)acountId config:(NSDictionary*)config resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
 {
-    [self purchaseOnStore:sku acountId:acountId resolve:resolve reject:reject];
+    [self purchaseOnStore:sku acountId:acountId config:config resolve:resolve reject:reject];
 }
 
 #pragma mark - purchaseProration
 
-RCT_EXPORT_METHOD(purchaseProration:(NSString*)sku originalSku:(NSString*)originalSku originalToken:(NSString*)originalToken prorationMode:(NSNumber*)prorationMode acountId:(NSString*)acountId  resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(purchaseProration:(NSString*)sku originalSku:(NSString*)originalSku originalToken:(NSString*)originalToken prorationMode:(NSNumber*)prorationMode acountId:(NSString*)acountId config:(NSDictionary*)config resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
 {
-    [self purchaseOnStore:sku acountId:acountId resolve:resolve reject:reject];
+    [self purchaseOnStore:sku acountId:acountId config:config resolve:resolve reject:reject];
 }
 
-- (void) purchaseOnStore:(NSString*)sku acountId:(NSString*)acountId resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
+- (void) purchaseOnStore:(NSString*)sku acountId:(NSString*)acountId config:(NSDictionary*)config resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
 {
     if (!self.isOpen) {
         if (reject) {
@@ -140,6 +140,27 @@ RCT_EXPORT_METHOD(purchaseProration:(NSString*)sku originalSku:(NSString*)origin
     payment.productIdentifier = sku;
     payment.applicationUsername = acountId;
     payment.quantity = 1;
+    
+    // only iOS 12.2
+    if (@available(iOS 12.2, *)) {
+        if (config && [config objectForKey:@"ios"]) {
+            NSDictionary* iosConfig = [config objectForKey:@"ios"];
+            if ([iosConfig objectForKey:@"promotion"]) {
+                NSDictionary* promotion = [iosConfig objectForKey:@"promotion"];
+                
+                NSString* identifier = [promotion objectForKey:@"identifier"];
+                NSString* keyIdentifier = [promotion objectForKey:@"keyIdentifier"];
+                NSString* signature = [promotion objectForKey:@"signature"];
+                NSString* nonceString = [promotion objectForKey:@"nonce"];
+                NSUUID* nonce = [[NSUUID alloc] initWithUUIDString:nonceString];
+                NSNumber* timestamp = [promotion objectForKey:@"timestamp"];
+                
+                SKPaymentDiscount* discount = [[SKPaymentDiscount alloc] initWithIdentifier:identifier keyIdentifier:keyIdentifier nonce:nonce signature:signature timestamp:timestamp];
+                payment.paymentDiscount = discount;
+            }
+        }
+    }
+    
     [[SKPaymentQueue defaultQueue] addPayment:payment];
 }
 

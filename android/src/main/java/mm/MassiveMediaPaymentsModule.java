@@ -25,6 +25,7 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.ReadableMap;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -204,7 +205,7 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void purchase(String productId, final String accountId, Promise promise) {
+    public void purchase(String productId, final String accountId, ReadableMap config, Promise promise) {
         Log.v(LOG_TAG, "Purchase " + productId + " with " + accountId);
         SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder();
         params.setSkusList(Arrays.asList(productId)).setType(BillingClient.SkuType.INAPP);
@@ -216,7 +217,7 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void purchaseSubscription(String productId, final String accountId, Promise promise) {
+    public void purchaseSubscription(String productId, final String accountId, ReadableMap config, Promise promise) {
         Log.v(LOG_TAG, "purchase Subscription " + productId + " with " + accountId);
         BillingResult result = billingClient.isFeatureSupported(BillingClient.FeatureType.SUBSCRIPTIONS);
         if (result.getResponseCode() == BillingClient.BillingResponseCode.OK) {
@@ -233,7 +234,7 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void purchaseProration(String productId, String originalProductId, final String originalPurchaseToken, final int prorationMode, final String accountId, final Promise promise) {
+    public void purchaseProration(String productId, String originalProductId, final String originalPurchaseToken, final int prorationMode, final String accountId, ReadableMap config, final Promise promise) {
         Log.v(LOG_TAG, "purchase Proration " + productId + " with " + accountId + ", mode=" + prorationMode);
         BillingResult result = billingClient.isFeatureSupported(BillingClient.FeatureType.SUBSCRIPTIONS_UPDATE);
         if (result.getResponseCode() == BillingClient.BillingResponseCode.OK) {
