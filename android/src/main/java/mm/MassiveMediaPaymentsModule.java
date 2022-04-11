@@ -193,13 +193,15 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
         Log.v(LOG_TAG, "Is Purchased " + productId);
         if (billingClient.isReady()) {
             Purchase.PurchasesResult purchasesResult = billingClient.queryPurchases(BillingClient.SkuType.INAPP);
-
-            for (Purchase purchase : Collections.unmodifiableList(purchasesResult.getPurchasesList())) {
-                if (purchase.getSku().equalsIgnoreCase(productId)) {
-                    promise.resolve(purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED);
-                    break;
+            if (purchasesResult.getPurchasesList() != null) {
+                for (Purchase purchase : Collections.unmodifiableList(purchasesResult.getPurchasesList())) {
+                    if (purchase.getSku().equalsIgnoreCase(productId)) {
+                        promise.resolve(purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED);
+                        return;
+                    }
                 }
             }
+            promise.reject("UNSPECIFIED", "productId not found in purchaseList.");
         } else {
             promise.reject("UNSPECIFIED", "Channel is not opened. Call open().");
         }
@@ -289,10 +291,12 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
             // try to find if product is consumable
             Purchase.PurchasesResult purchasesResult = billingClient.queryPurchases(BillingClient.SkuType.INAPP);
             Purchase purchase = null;
-            for (Purchase lookup : Collections.unmodifiableList(purchasesResult.getPurchasesList())) {
-                if (lookup.getSku().equalsIgnoreCase(productId)) {
-                    purchase = lookup;
-                    break;
+            if (purchasesResult.getPurchasesList() != null) {
+                for (Purchase lookup : Collections.unmodifiableList(purchasesResult.getPurchasesList())) {
+                    if (lookup.getSku().equalsIgnoreCase(productId)) {
+                        purchase = lookup;
+                        break;
+                    }
                 }
             }
 
@@ -302,10 +306,12 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
             } else {
                 // try to find a sub now, and acknowledge if possible
                 purchasesResult = billingClient.queryPurchases(BillingClient.SkuType.SUBS);
-                for (Purchase lookup : Collections.unmodifiableList(purchasesResult.getPurchasesList())) {
-                    if (lookup.getSku().equalsIgnoreCase(productId)) {
-                        purchase = lookup;
-                        break;
+                if (purchasesResult.getPurchasesList() != null) {
+                    for (Purchase lookup : Collections.unmodifiableList(purchasesResult.getPurchasesList())) {
+                        if (lookup.getSku().equalsIgnoreCase(productId)) {
+                            purchase = lookup;
+                            break;
+                        }
                     }
                 }
 
