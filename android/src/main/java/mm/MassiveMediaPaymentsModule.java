@@ -260,8 +260,8 @@ public class MassiveMediaPaymentsModule extends ReactContextBaseJavaModule {
                         new SkuDetailsResponseListener() {
                             @Override
                             public void onSkuDetailsResponse(@NonNull BillingResult billingResult,
-                                                             List<SkuDetails> skuDetailsList) {
-                                if (skuDetailsList.isEmpty()) {
+                                                             @Nullable List<SkuDetails> skuDetailsList) {
+                                if (skuDetailsList == null || skuDetailsList.isEmpty()) {
                                     promise.reject("UNSPECIFIED", "No Sku Details found for " + skuParams.build().getSkusList().toString() + ".");
                                 } else {
                                     billingParams.setSkuDetails(skuDetailsList.get(0));
